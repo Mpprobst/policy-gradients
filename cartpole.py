@@ -20,6 +20,7 @@ class CartPole:
                 self.Run(env, agent, isTest=False)
 
     def Run(self, env, agent, isTest=False):
+        # state is an array of 4 floats [position, velocity, pole angle, pole angular velocity]
         currentState = env.reset()
 
         done = False
@@ -36,6 +37,7 @@ class CartPole:
 
             #Execute actions using the step function. Returns the nextState, reward, a boolean indicating whether this is a terminal state. The final thing it returns is a probability associated with the underlying transition distribution, but we shouldn't need that for this assignment.
             nextState, reward, done, _ = env.step(actionToTake)
+
             if not isTest:
                 agent.UpdateModels(currentState, nextState, actionToTake, reward)
 
