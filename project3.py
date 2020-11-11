@@ -27,5 +27,4 @@ args = parser.parse_args()
 agentFunc = AGENTS_MAP[args.agent]
 envFunc = ENVIRONMENTS_MAP[args.env]
 
-agent = agentFunc()
-env = envFunc(args.numEpisodes, agent, args.verbose)
+env = envFunc(args.numEpisodes, agentFunc, args.verbose)

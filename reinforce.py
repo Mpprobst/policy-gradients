@@ -6,47 +6,78 @@ Purpose: Implements an agent using the REINFORCE policy gradient algorithm
 import gym
 import numpy as np
 import random
+import neuralNet as nn
 import torch as T
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+
 GAMMA = 0.98
-LEARNING_RATE = 0.3
-
-class Net(nn.Module):
-    def __init__(self, inputDims, outputDims):
-        super(Net, self).__init__()
-        self.outputDims = outputDims
-        self.inputDims = inputDims
-        self.fc1 = nn.Linear(self.inputDims, 8)    #first layer
-        self.fc2 = nn.Linear(8, 4)                #second layer
-        self.fc3 = nn.Linear(4, self.outputDims)   #output layer
-        self.device = T.device('cpu')
-        self.to(self.device)
-
-    #Implements a feed forward network. state is a one hot vector indicating current state
-    def Forward(self, state):
-        x = F.logsigmoid(self.fc1(state))
-        x = F.logsigmoid(self.fc2(x))
-        actions = self.fc3(x)
-        return actions
+LEARNING_RATE = 0.0075
+MEMORY_SIZE = 10000
 
 class ReinforceAgent:
     def __init__(self, env):
+        self.name = 'REINFORCE'
         self.epsilon = 1
-        self.n_states = env.observation_space.n
+        self.stateDims = env.observation_space.shape[0]
         self.n_actions = env.action_space.n
-        self.net = Net(1, self.n_actions)
+        self.net = nn.Net(self.stateDims, self.n_actions)
         self.optimizer = optim.Adam(self.net.parameters(), lr=LEARNING_RATE)
-        self.qTable = np.zeros([self.n_states, env.action_space.n])     # for the NN, this is for debugging only
+        self.rewardMemory = []
+        self.actionMemory = []
         self.successCount = 0
 
+    def GetStateTensor(self, state):
+        return T.tensor(state).to(self.net.device).float()
+
     def GetBestAction(self, state):
-        return 0
+        stateTensor = self.GetStateTensor(state)
+        probabilities = F.softmax(self.net.Forward(stateTensor))
+        actionProbs = T.distributions.Categorical(probabilities)
+        #action = actions[T.argmax(actions).item()].item()
+        action = actionProbs.sample()
+        logProbs = actionProbs.log_prob(action)
+        self.actionMemory.append(logProbs)
+        #options = []
+        #for i in range(len(actions)):
+        #    if actions[i].item() == action:
+        #        options.append(i)
+        return action.item()
+
+    def EpsilonGreedy(self, env, state):
+        # explore
+        if random.random() < self.epsilon:
+            return self.actionMemory.append()
+        # exploit
+        return self.GetBestAction(state)
 
     def SuggestAction(self, env, state):
-        return 0
+        #return self.EpsilonGreedy(env, state)
+        return self.GetBestAction(state)
 
     def UpdateModels(self, state, nextState, action, reward):
-        return 0
+        self.rewardMemory.append(reward)
+
+    def Learn(self):
+        self.optimizer.zero_grad()
+
+        Gt = np.zeros_like(self.rewardMemory, dtype=np.float64)
+        for t in range(len(self.rewardMemory)):
+            sum = 0
+            discount = 1
+            for k in range(t, len(self.rewardMemory)):
+                sum += self.rewardMemory[k] * discount
+                discount *= GAMMA
+            Gt[t] = sum
+        Gt = T.tensor(Gt, dtype=T.float).to(self.net.device)
+        loss = 0
+        baseline = np.average(self.rewardMemory)
+        for g, logprob in zip(Gt, self.actionMemory):
+            #print(f'f={g} b={baseline}')
+            loss += (-g + baseline) * logprob
+        loss.backward()
+        self.optimizer.step()
+
+        self.actionMemory = []
+        self.rewardMemory = []
