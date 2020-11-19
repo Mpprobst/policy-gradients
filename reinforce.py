@@ -105,22 +105,5 @@ class ReinforceAgent:
             self.returnMemory = []
             self.longestEpisodeInBatch = 0
 
-            #print(f'baseline={baseline} g={-g} logprob = {logprob} loss={loss}')
-        #self.batchMemory.append(loss)
-        #if len(self.batchMemory) >= BATCH_SIZE:
-            #print(f'mem={self.batchMemory}\nloss = {loss}')
-            #T.cat(self.batchMemory, 0)
-        #    for i in range(len(self.batchMemory)):
-        #        loss = self.batchMemory[i]
-        #        print(loss)
-        #        loss.backward()
-
-
-            #loss = T.mean(T.stack(self.batchMemory))
-            #print(f'mem={self.batchMemory}\nloss = {loss}')
-        #    self.batchMemory = []
-            #for i in range(len(self.actionMemory)):
-
-        #    self.actionCount = 0
         self.actions = []
         self.rewards = []
