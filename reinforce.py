@@ -24,11 +24,12 @@ class ReinforceAgent:
         self.n_actions = env.action_space.n
         self.net = nn.Net(self.stateDims, self.n_actions)
         self.optimizer = optim.Adam(self.net.parameters(), lr=LEARNING_RATE)
-        self.returnMemory = []
         self.recentAction = None
         self.rewards = []
         self.actions = []
         self.actionMemory = []
+        self.rewardMemory = []
+        self.returnMemory = []
         self.longestEpisodeInBatch = 0
         self.loss = 0
 
@@ -57,12 +58,15 @@ class ReinforceAgent:
         Gt = np.zeros_like(self.rewards, dtype=np.float64)
         for t in range(len(self.rewards)):
             sum = 0
+            discount = 1
             for k in range(t, len(self.rewards)):
-                sum += self.rewards[k] * GAMMA
+                sum += self.rewards[k] * discount
+                discount *= GAMMA
             Gt[t] = sum
         #Gt = T.tensor(Gt, dtype=T.float).to(self.net.device)
 
         self.actionMemory.append(self.actions)
+        self.rewardMemory.append(self.rewards)
         self.returnMemory.append(Gt)
 
         if len(self.actions) > self.longestEpisodeInBatch:
@@ -74,10 +78,8 @@ class ReinforceAgent:
             for ep in range(len(self.returnMemory)):
                 self.returnMemory[ep] = np.pad(self.returnMemory[ep], (0, self.longestEpisodeInBatch - len(self.returnMemory[ep])), 'constant')
 
-            #avgReturns = np.zeros([self.longestEpisodeInBatch])
-            avgReturns = np.mean(self.returnMemory, axis=0)
-            avgReturns = T.tensor(avgReturns, dtype=T.float).to(self.net.device)
-            #print(avgReturns)
+            avgReturn = np.zeros([self.longestEpisodeInBatch])
+            avgReturn = np.mean(self.returnMemory, axis=0)
 
             losses = []
             for batch in range(len(self.actionMemory)):
@@ -85,13 +87,13 @@ class ReinforceAgent:
                 loss = 0
                 baselineIndex = 0
                 for g, logprob in zip(self.returnMemory[batch], self.actionMemory[batch]):
-                    loss += ((g - avgReturns[baselineIndex]) * -logprob)
-                    #print(f'({g}-{avgReturns[baselineIndex]}) * {-logprob}\n= {loss}')
-
+                    loss += (g - avgReturn[baselineIndex]) * -logprob
+                    #print("(%.5f - %.5f) * %.5f" % (g, avgReturn[baselineIndex], -logprob))
                     baselineIndex += 1
                 #loss /= len(self.actionMemory[batch])
+                #print(f'LOSS:{loss}\n')
                 losses.append(loss)
-                #print(f'batch[{batch}] loss={loss}\n\n')
+
             loss = T.mean(T.stack(losses))
             #print(loss)
             self.optimizer.zero_grad()
