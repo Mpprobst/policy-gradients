@@ -8,7 +8,7 @@ import gym
 import csv
 import numpy as np
 
-TEST_INDEX = 100   # test after every 1000 training episodes
+TEST_INDEX = 10   # test after every 1000 training episodes
 NUM_TESTS = 10
 
 class CartPole:
@@ -22,10 +22,12 @@ class CartPole:
             for i in range(1, numEpisodes):
                 if i % TEST_INDEX == 0:
                     scores = []
+                    losses = []
                     for t in range(NUM_TESTS):
                         value = self.Run(env, agent, isTest=True)
                         scores.append(value)
-                    print(f'TEST {i / TEST_INDEX}:\t Avg Reward = {np.average(scores)}')
+                        losses.append(agent.loss)
+                    print(f'TEST {i / TEST_INDEX}:\t Avg Reward = {np.average(scores)}\tloss={np.average(losses)}')
                     writer.writerow([i / TEST_INDEX, np.average(scores)])
                 else:
                     self.Run(env, agent, isTest=False)

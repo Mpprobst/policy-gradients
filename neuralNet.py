@@ -12,9 +12,9 @@ class Net(nn.Module):
         super(Net, self).__init__()
         self.outputDims = outputDims
         self.inputDims = inputDims
-        self.fc1 = nn.Linear(self.inputDims, 8)    #first layer
-        self.fc2 = nn.Linear(8, 4)                #second layer
-        self.fc3 = nn.Linear(4, self.outputDims)   #output layer
+        self.fc1 = nn.Linear(self.inputDims, 32)    #first layer
+        self.fc2 = nn.Linear(32, 16)                #second layer
+        self.fc3 = nn.Linear(16, self.outputDims)   #output layer
         self.device = T.device('cpu')
         self.to(self.device)
 
