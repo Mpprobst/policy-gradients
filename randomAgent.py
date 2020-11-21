@@ -7,8 +7,9 @@ Purpose: Implements a basic agent that picks moves randomly
 import random
 
 class RandomAgent:
-    def __init__(self):
+    def __init__(self, env, lr):
         self.value = 0
+        self.name = "random"
 
     def GetBestAction(self, state):
         return random.choice([0,1])

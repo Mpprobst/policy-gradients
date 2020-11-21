@@ -11,7 +11,6 @@ import torch as T
 import torch.nn.functional as F
 import torch.optim as optim
 
-
 GAMMA = 0.98
 BATCH_SIZE = 5
 
@@ -32,7 +31,6 @@ class ReinforceAgent:
         self.longestEpisodeInBatch = 0
         self.losses = []
 
-
     def GetStateTensor(self, state):
         return T.tensor(state).to(self.net.device).float()
 
@@ -46,7 +44,6 @@ class ReinforceAgent:
         return action.item()
 
     def SuggestAction(self, env, state):
-        #return self.EpsilonGreedy(env, state)
         return self.GetBestAction(state)
 
     def UpdateModels(self, state, nextState, action, reward):
@@ -62,7 +59,6 @@ class ReinforceAgent:
                 sum += self.rewards[k] * discount
                 discount *= GAMMA
             Gt[t] = sum
-        #Gt = T.tensor(Gt, dtype=T.float).to(self.net.device)
 
         self.actionMemory.append(self.actions)
         self.rewardMemory.append(self.rewards)
@@ -82,19 +78,14 @@ class ReinforceAgent:
 
             losses = []
             for batch in range(len(self.actionMemory)):
-                #print(f'returns={Gt}')
                 loss = 0
                 baselineIndex = 0
                 for g, logprob in zip(self.returnMemory[batch], self.actionMemory[batch]):
                     loss += (g - avgReturn[baselineIndex]) * -logprob
-                    #print("(%.5f - %.5f) * %.5f" % (g, avgReturn[baselineIndex], -logprob))
                     baselineIndex += 1
-                #loss /= len(self.actionMemory[batch])
-                #print(f'LOSS:{loss}\n')
                 losses.append(loss)
 
             loss = T.mean(T.stack(losses))
-            #print(loss)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
