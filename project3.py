@@ -8,7 +8,6 @@ import csv
 import cartpole
 import lunarlander
 import reinforce
-import randomAgent
 
 ENVIRONMENTS_MAP = {'cartpole' : cartpole.CartPole,
                     'lunarlander' : lunarlander.LunarLander }
