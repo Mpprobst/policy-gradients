@@ -14,19 +14,18 @@ class LunarLander:
     def __init__(self, numEpisodes, agentFunc, verbose):
         env = gym.make('LunarLander-v2')
         self.verbose = verbose
-        agent = agentFunc(env)
+        agent = agentFunc(env, 0.01)
         filename = f'results/lunarlander_{agent.name}.csv'
         with open(filename, 'w', newline = '') as csvfile:
             writer = csv.writer(csvfile, delimiter = ',')
             for i in range(1, numEpisodes):
                 if i % TEST_INDEX == 0:
                     scores = []
-                    losses = []
                     for t in range(NUM_TESTS):
                         value = self.Run(env, agent, True)
                         scores.append(value)
-                        losses.append(agent.loss)
-                    print(f'TEST %d:\t Avg Reward = %.3f\tloss=%.2f' %(int(i / TEST_INDEX), np.average(scores), np.average(losses)))
+                    print(f'TEST %d:\t Avg Reward = %.3f\tloss=%.5f' %(int(i / TEST_INDEX), np.average(scores), np.average(agent.losses)))
+                    agent.losses = []
                     writer.writerow([i / TEST_INDEX, np.average(scores)])
                 else:
                     self.Run(env, agent)

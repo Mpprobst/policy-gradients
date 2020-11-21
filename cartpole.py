@@ -15,19 +15,18 @@ class CartPole:
     def __init__(self, numEpisodes, agentFunc, verbose):
         env = gym.make('CartPole-v0')
         self.verbose = verbose
-        agent = agentFunc(env)
+        agent = agentFunc(env, 0.1)
         filename = f'results/cartpole_{agent.name}.csv'
         with open(filename, 'w', newline = '') as csvfile:
             writer = csv.writer(csvfile, delimiter = ',')
             for i in range(1, numEpisodes):
                 if i % TEST_INDEX == 0:
                     scores = []
-                    losses = []
                     for t in range(NUM_TESTS):
                         value = self.Run(env, agent, isTest=True)
                         scores.append(value)
-                        losses.append(agent.loss)
-                    print(f'TEST {i / TEST_INDEX}:\t Avg Reward = {np.average(scores)}\tloss={np.average(losses)}')
+                    print(f'TEST {i / TEST_INDEX}:\t Avg Reward = {np.average(scores)}\tavgLoss={np.average(agent.losses)}')
+                    agent.losses = []
                     writer.writerow([i / TEST_INDEX, np.average(scores)])
                 else:
                     self.Run(env, agent, isTest=False)

@@ -13,17 +13,16 @@ import torch.optim as optim
 
 
 GAMMA = 0.98
-LEARNING_RATE = 0.1
 BATCH_SIZE = 5
 
 class ReinforceAgent:
-    def __init__(self, env):
+    def __init__(self, env, lr):
         self.name = 'REINFORCE'
         self.epsilon = 1
         self.stateDims = env.observation_space.shape[0]
         self.n_actions = env.action_space.n
         self.net = nn.Net(self.stateDims, self.n_actions)
-        self.optimizer = optim.Adam(self.net.parameters(), lr=LEARNING_RATE)
+        self.optimizer = optim.Adam(self.net.parameters(), lr=lr)
         self.recentAction = None
         self.rewards = []
         self.actions = []
@@ -31,7 +30,7 @@ class ReinforceAgent:
         self.rewardMemory = []
         self.returnMemory = []
         self.longestEpisodeInBatch = 0
-        self.loss = 0
+        self.losses = []
 
 
     def GetStateTensor(self, state):
@@ -99,7 +98,7 @@ class ReinforceAgent:
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-            self.loss = loss.item()
+            self.losses.append(loss.item())
 
             self.actionMemory = []
             self.returnMemory = []
